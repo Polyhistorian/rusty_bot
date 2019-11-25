@@ -1,14 +1,27 @@
-use serenity::client::Client;
-use serenity::model::channel::Message;
-use serenity::prelude::{EventHandler, Context};
-use serenity::framework::standard::{
-    StandardFramework,
-    CommandResult,
-    macros::{
-        command,
-        group
+#![warn(clippy::all, /*clippy::cargo,*/ clippy::pedantic)]
+ 
+use serenity::{
+    client::Client,
+    model::{
+        channel::Message,
+        gateway::Ready
+    },
+    prelude::{
+        EventHandler, 
+        Context
+    },
+    framework::standard::{
+        StandardFramework,
+        CommandResult,
+        macros::{
+            command,
+            group
+        }   
     }
 };
+
+use std::fs;
+use std::process;
 
 group!({
     name: "general",
@@ -16,19 +29,18 @@ group!({
     commands: [ping],
 });
 
-use std::env;
-use std::fs;
-use std::process;
-
 struct Handler;
 
-impl EventHandler for Handler {}
+impl EventHandler for Handler {
+    fn ready(&self, _: Context, ready: Ready) {
+        println!("Connected as {}", ready.user.name);
+    }
+}
 
 fn main() {
     let token = fs::read_to_string("token.txt").expect("Something went wrong reading the token file, ensure that you have a file named token.txt");
 
     if token.len() != 59 {
-        println!["{}", token.len()];
         println!["The token is not the correct length, please check that the token is correctly inputted."];
         process::exit(1);
     }

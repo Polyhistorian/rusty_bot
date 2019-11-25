@@ -1,8 +1,16 @@
 [package]
-name = "rusty_bot"
-version = "0.1.0"
-authors = ["TheFinnishArmy <thefinnisharmy@gmail.com>"]
+authors = ["Rasmus Korjus <thefinnisharmy@gmail.com>"]
+categories = ["command-line-utilities", "games"]
+description = "Rust implementation of my Pyt<wh>orstBot, meaning a bot to fetch ability info from the overwatch wiki"
 edition = "2018"
+keywords = ["discord", "bot", "overwatch"]
+license = "MIT"
+name = "rusty_bot"
+repository = "https://github.com/TheFinnishArmy/rusty_bot" #Not public, though if you're seeing this it probably is, so remind me to omit this
+readme = "README.md"
+publish = false
+version = "0.1.0"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
