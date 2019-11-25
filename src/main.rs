@@ -86,7 +86,9 @@ fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
 #[owners_only]
 fn shutdown(ctx: &mut Context, msg: &Message) -> CommandResult {
     msg.reply(ctx, "Shutting down.")?;
-     
+
+    println!["Got shutdown command from user, shutting down."];
+
     process::exit(0);
 }
 
