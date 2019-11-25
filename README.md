@@ -1,3 +1,3 @@
-#rusty_bot
+# rusty_bot
 
 Rust implementation of Py-wh-orstBot 
