@@ -20,13 +20,16 @@ use serenity::{
     }
 };
 
-use std::fs;
-use std::process;
+use std::{
+    fs,
+    process,
+    collections::HashSet
+};
 
 group!({
     name: "general",
     options: {},
-    commands: [ping],
+    commands: [ping, shutdown],
 });
 
 struct Handler;
@@ -48,8 +51,22 @@ fn main() {
     // Login with a bot token from the environment
     let mut client = Client::new(token, Handler)
         .expect("Error creating client");
+
+    let owners = match client.cache_and_http.http.get_current_application_info() {
+        Ok(info) => {
+            let mut set = HashSet::new();
+            set.insert(info.owner.id);
+
+            set
+        },
+        Err(why) => panic!("Couldn't get application info: {:?}", why),
+    };
+
     client.with_framework(StandardFramework::new()
-        .configure(|c| c.prefix("~")) // set the bot's prefix to "~"
+        .configure(|c| c
+            .owners(owners)
+            .prefix("~")
+        )
         .group(&GENERAL_GROUP));
 
     // start listening for events by starting a single shard
@@ -64,3 +81,12 @@ fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     Ok(())
 }
+
+#[command]
+#[owners_only]
+fn shutdown(ctx: &mut Context, msg: &Message) -> CommandResult {
+    msg.reply(ctx, "Shutting down.")?;
+     
+    process::exit(0);
+}
+
