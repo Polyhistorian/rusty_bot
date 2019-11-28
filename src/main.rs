@@ -3,7 +3,6 @@
 use serenity::{
     client::Client,
     model::{
-        channel::Message,
         gateway::Ready
     },
     prelude::{
@@ -12,11 +11,7 @@ use serenity::{
     },
     framework::standard::{
         StandardFramework,
-        CommandResult,
-        macros::{
-            command,
-            group
-        }   
+        macros::group
     }
 };
 
@@ -26,11 +21,25 @@ use std::{
     collections::HashSet
 };
 
+mod commands;
+
+use commands::{
+    abilityinfo::*,
+    common::*
+};
+
 group!({
     name: "general",
     options: {},
     commands: [ping, shutdown],
 });
+
+group!({
+    name: "abilityinfo",
+    options: {},
+    commands: [abilityinfo],
+});
+
 
 struct Handler;
 
@@ -67,28 +76,13 @@ fn main() {
             .owners(owners)
             .prefix("~")
         )
+        .group(&ABILITYINFO_GROUP)
         .group(&GENERAL_GROUP));
+
 
     // start listening for events by starting a single shard
     if let Err(why) = client.start() {
         println!("An error occurred while running the client: {:?}", why);
     }
-}
-
-#[command]
-fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
-    msg.reply(ctx, "Pong!")?;
-
-    Ok(())
-}
-
-#[command]
-#[owners_only]
-fn shutdown(ctx: &mut Context, msg: &Message) -> CommandResult {
-    msg.reply(ctx, "Shutting down.")?;
-
-    println!["Got shutdown command from user, shutting down."];
-
-    process::exit(0);
 }
 
