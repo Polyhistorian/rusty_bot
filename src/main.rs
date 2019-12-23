@@ -49,6 +49,7 @@ impl EventHandler for Handler {
     }
 }
 
+
 fn main() {
     let token = fs::read_to_string("token.txt").expect("Something went wrong reading the token file, ensure that you have a file named token.txt");
 

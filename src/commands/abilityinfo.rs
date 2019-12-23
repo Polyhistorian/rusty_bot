@@ -1,13 +1,7 @@
 extern crate heck;
-extern crate http;
+extern crate reqwest;
 
 use heck::TitleCase;
-
-use http::{
-    Request,
-    Response,
-    Uri
-};
 
 use serenity::prelude::*;
 use serenity::model::prelude::*;
@@ -30,9 +24,11 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     println!["{}", message_content];
 
-    let ability_uri = uri_create(message_content);
+    let request_url = uri_create(&message_content);
 
-    println!["{}", ability_uri.uri()];
+    let response_body = reqwest::get(&request_url)?.text()?;
+
+    println!("body = {:?}", response_body);
 
     Ok(())
 }
@@ -49,22 +45,15 @@ fn message_process(message: String) -> String {
     message_content.replace(" ", "_")
 }
 
-fn uri_create(name: String) -> Request<()> {
-    let uri_base = "overwatch.wikia.com";
-    let arguments = format!("/api.php?action=query&titles={}&prop=revisions&rvprop=content&format=json", name);
-    let arguments_slice : &str = &arguments[..]; 
-    
-    
-    let custom_uri = Uri::builder()
-        .scheme("http")
-        .authority(uri_base)
-        .path_and_query(arguments_slice)
-        .build()
-        .unwrap();
+fn uri_create(name: &str) -> String {
+    let uri_base = "http://overwatch.wikia.com";
+    let arguments = format!("/api.php?action=query\
+                                &prop=revisions\
+                                &rvprop=content\
+                                &format=json\
+                                &titles={}", name
+                            );
+                            
 
-    Request::builder()
-        .method("GET")
-        .uri(custom_uri)
-        .body(())
-        .unwrap()
+    format!("{}{}", uri_base, arguments)
 }
