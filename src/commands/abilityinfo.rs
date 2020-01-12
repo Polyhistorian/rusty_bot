@@ -41,18 +41,14 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     let deserialized : HashMap<String, Value> = serde_json::from_str(&filtered_string).unwrap();
 
-    if deserialized.len() != 1{
-        msg.reply(ctx, "Server returned too many options for formatting, try again later.")?;
-        return Err(CommandError("Abilityinfo: Data error, too many returned options from server".to_string()))
-    }
-
     let mut deserialised_filter : String = "".to_string();
 
     for (_, value) in deserialized {
-        deserialised_filter = value.to_string()
+        deserialised_filter = value.to_string();
+        break
     };
 
-    if deserialised_filter.len() == 0{
+    if deserialised_filter.is_empty() {
         msg.reply(ctx, "Server returned too many options for formatting, try again later.")?;
         return Err(CommandError("Abilityinfo: Data error, too many returned options from server".to_string()))
     }
