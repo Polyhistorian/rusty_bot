@@ -33,12 +33,31 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     let response_body = reqwest::get(&request_url)?.text()?;
 
+    let ability_parse = strip_to_ability_info(&response_body);
+
+    let ability_string : String;
+
+    if let Ok(x) = ability_parse { 
+        ability_string = x;
+    } 
+    else {
+        msg.reply(ctx, "Server returned no options for formatting, try again later.")?;
+        return Err(CommandError("Abilityinfo: Data error, no returned options from server".to_string()));
+    }
+
+    println!("{}", ability_string);
+
+    Ok(())
+}
+
+fn strip_to_ability_info(response_body : &str ) -> Result<String, CommandError> {
     let response_json = json::parse(&response_body)?;
 
     let filtered_data = response_json["query"]["pages"].clone();
 
     let filtered_string = json::stringify(filtered_data);
 
+    //Convert JSON object to a HashMap to make accessing the first object easier (The name of which is an ID, so we can't predict it)
     let deserialized : HashMap<String, Value> = serde_json::from_str(&filtered_string).unwrap();
 
     let value = deserialized.values().nth(0);
@@ -49,7 +68,6 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
         deserialised_filter = x.to_string() 
     } 
     else {
-        msg.reply(ctx, "Server returned no options for formatting, try again later.")?;
         return Err(CommandError("Abilityinfo: Data error, no returned options from server".to_string()))
     }
 
@@ -57,11 +75,7 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     let filtered_ability_json = ability_json["revisions"][0]["*"].clone();
 
-    let ability_string : String = json::stringify(filtered_ability_json);
-
-    println!("{}", ability_string);
-
-    Ok(())
+    Ok(json::stringify(filtered_ability_json))
 }
 
 fn message_to_title(message: String) -> String {
