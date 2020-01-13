@@ -1,8 +1,10 @@
 extern crate heck;
-extern crate reqwest;
 extern crate json;
+extern crate reqwest;
 
 use heck::TitleCase;
+
+use regex::Regex;
 
 use serde_json::Value;
 
@@ -40,8 +42,8 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
     match page_parse {
         Ok(x) => page_data = x,
         Err(x) => {
-            msg.reply(ctx, "Server returned no options for formatting, try again later.")?;
-            return Err(x);
+            msg.reply(ctx, "Server returned no options for formatting, check that an ability by that name exists or try again later.")?;
+            return Err(x)
         }
     }
 
@@ -49,7 +51,69 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     let ability_box : &str = page_data.split("</onlyinclude>").collect::<Vec<&str>>()[0];
 
-    println!["\n{}", ability_box];
+    let mut split_ability_box : Vec<&str> = ability_box.split("\\n").collect::<Vec<&str>>();
+
+    //Remove ending and starting lines, leaving content 
+    split_ability_box.remove(0);
+    split_ability_box.pop();
+
+    let mut main_list : Vec<String> = Vec::new();
+    let mut primary_fire_list : Vec<String> = Vec::new();
+    let mut secondary_fire_list : Vec<String> = Vec::new();
+
+
+    for item in split_ability_box {
+        let mutable_item = item;
+
+        let replaced_item = mutable_item.replace('|', "")
+                    .replace('{', "")
+                    .replace('}', "")
+                    .replace('[', "")
+                    .replace(']', "")
+                    .replace("Texttip", "")
+                    .replace("texttip", "")
+                    .replace("/Texttip", "")
+                    .replace("/texttip", "");
+
+        let colour_code_regex = Regex::new(r"<.*?>").unwrap();
+
+        let regex_replaced_item : String = colour_code_regex.replace_all(&replaced_item, "").trim().to_string();
+
+        if regex_replaced_item.starts_with("image") || regex_replaced_item.starts_with("name") || regex_replaced_item.starts_with("description") {
+            main_list.push(regex_replaced_item.to_string());
+        }
+        else if regex_replaced_item.starts_with("secd") {
+            secondary_fire_list.push(regex_replaced_item.to_string());
+        }
+        else {
+            primary_fire_list.push(regex_replaced_item.to_string());
+        }
+    }
+
+    /*
+    println!["{}", ability_box];
+
+    println!();
+    */
+
+    println!["Printing main list:"];
+    for item in main_list {
+        println!["{}", item];
+    }
+
+    println!();
+    println!["Printing primary fire list:"];
+    for item in primary_fire_list {
+        println!["{}", item];
+    }
+
+    if !secondary_fire_list.is_empty() {
+        println!();
+        println!["Printing secondary fire list:"];
+        for item in secondary_fire_list {
+            println!["{}", item];
+        }
+    }
 
     Ok(())
 }
@@ -75,11 +139,17 @@ fn strip_to_page_data(response_body : &str ) -> Result<String, CommandError> {
         return Err(CommandError("Abilityinfo: Data error, no returned options from server".to_string()))
     }
 
-    let ability_json = json::parse(&deserialised_filter)?;
+    //println!["{}", deserialised_filter];
 
-    let filtered_ability_json = ability_json["revisions"][0]["*"].clone();
+    if !deserialised_filter.contains("revisions") {
+        return Err(CommandError("Abilityinfo: Data error, no returned options from server".to_string()))
+    }
 
-    Ok(json::stringify(filtered_ability_json))
+    let page_json = json::parse(&deserialised_filter)?;
+
+    let filtered_page_json = page_json["revisions"][0]["*"].clone();
+
+    Ok(json::stringify(filtered_page_json))
 }
 
 fn message_to_title(message: String) -> String {
