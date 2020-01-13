@@ -35,17 +35,21 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     let ability_parse = strip_to_ability_info(&response_body);
 
-    let ability_string : String;
+    let page_data : String;
 
-    if let Ok(x) = ability_parse { 
-        ability_string = x;
-    } 
-    else {
-        msg.reply(ctx, "Server returned no options for formatting, try again later.")?;
-        return Err(CommandError("Abilityinfo: Data error, no returned options from server".to_string()));
+    match ability_parse {
+        Ok(x) => page_data = x,
+        Err(x) => {
+            msg.reply(ctx, "Server returned no options for formatting, try again later.")?;
+            return Err(x);
+        }
     }
 
-    println!("{}", ability_string);
+    //println!("{}", page_data);
+
+    let ability_string : &str = page_data.split("</onlyinclude>").collect::<Vec<&str>>()[0];
+
+    println!["\n{}", ability_string];
 
     Ok(())
 }
