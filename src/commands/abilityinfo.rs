@@ -33,11 +33,11 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     let response_body = reqwest::get(&request_url)?.text()?;
 
-    let ability_parse = strip_to_ability_info(&response_body);
+    let page_parse = strip_to_page_data(&response_body);
 
     let page_data : String;
 
-    match ability_parse {
+    match page_parse {
         Ok(x) => page_data = x,
         Err(x) => {
             msg.reply(ctx, "Server returned no options for formatting, try again later.")?;
@@ -47,14 +47,14 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     //println!("{}", page_data);
 
-    let ability_string : &str = page_data.split("</onlyinclude>").collect::<Vec<&str>>()[0];
+    let ability_box : &str = page_data.split("</onlyinclude>").collect::<Vec<&str>>()[0];
 
-    println!["\n{}", ability_string];
+    println!["\n{}", ability_box];
 
     Ok(())
 }
 
-fn strip_to_ability_info(response_body : &str ) -> Result<String, CommandError> {
+fn strip_to_page_data(response_body : &str ) -> Result<String, CommandError> {
     let response_json = json::parse(&response_body)?;
 
     let filtered_data = response_json["query"]["pages"].clone();
