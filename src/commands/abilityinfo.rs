@@ -18,6 +18,8 @@ use serenity::framework::standard::{
 
 use std::collections::HashMap;
 
+mod embedbuilder;
+
 #[command]
 fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
     let mut message_content : String = msg.content.clone();
@@ -79,11 +81,20 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
 
         let regex_replaced_item : String = colour_code_regex.replace_all(&replaced_item, "").trim().to_string();
 
+        if regex_replaced_item.contains("key=") {
+            continue
+        }
+
         if regex_replaced_item.starts_with("image") || regex_replaced_item.starts_with("name") || regex_replaced_item.starts_with("description") {
             main_list.push(regex_replaced_item.to_string());
         }
         else if regex_replaced_item.starts_with("secd") {
-            secondary_fire_list.push(regex_replaced_item.to_string());
+            let prefix_removal = regex_replaced_item.replacen("secd", "", 1);
+            secondary_fire_list.push(prefix_removal.to_string());
+        }
+        else if regex_replaced_item.starts_with("prim") {
+            let prefix_removal = regex_replaced_item.replacen("prim", "", 1);
+            primary_fire_list.push(prefix_removal.to_string());
         }
         else {
             primary_fire_list.push(regex_replaced_item.to_string());
@@ -97,22 +108,57 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
     */
 
     println!["Printing main list:"];
-    for item in main_list {
+    for item in main_list.clone() {
         println!["{}", item];
     }
 
     println!();
     println!["Printing primary fire list:"];
-    for item in primary_fire_list {
+    for item in primary_fire_list.clone() {
         println!["{}", item];
     }
 
     if !secondary_fire_list.is_empty() {
         println!();
         println!["Printing secondary fire list:"];
-        for item in secondary_fire_list {
+        for item in secondary_fire_list.clone() {
             println!["{}", item];
         }
+    }
+
+    let channel_id = msg.channel_id;
+
+    //Main message, with weapon name and description
+    let _ = channel_id.send_message(&ctx.http, |m| {    
+        m.embed(|mut e| {
+            e = embedbuilder::build_new(main_list, e);
+
+            e
+        });
+        m
+    });
+
+    //Primary fire message, with info on that mode
+    let _ = channel_id.send_message(&ctx.http, |m| {    
+        m.embed(|mut e| {
+            e = embedbuilder::build_new(primary_fire_list, e);
+
+            e
+        });
+        m
+    });
+
+    //All weapons don't have a secondary fire mode, so no message for them
+    if !secondary_fire_list.is_empty() {
+        let _ = channel_id.send_message(&ctx.http, |m| {    
+            m.embed(|mut e| {
+                e = embedbuilder::build_new(secondary_fire_list, e);
+                
+    
+                e
+            });
+            m
+        });
     }
 
     Ok(())
