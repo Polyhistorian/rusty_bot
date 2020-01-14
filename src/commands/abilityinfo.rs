@@ -115,6 +115,18 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
         }
     }
 
+    let channel_id = msg.channel_id;
+
+    let _ = channel_id.send_message(&ctx.http, |m| {    
+        m.embed(|e| {
+            e.title("This is an embed");
+            e.description("With a description");
+    
+            e
+        });
+        m
+    });
+
     Ok(())
 }
 
