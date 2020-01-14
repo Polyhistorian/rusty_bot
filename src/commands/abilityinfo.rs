@@ -18,6 +18,8 @@ use serenity::framework::standard::{
 
 use std::collections::HashMap;
 
+mod embedbuilder;
+
 #[command]
 fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
     let mut message_content : String = msg.content.clone();
