@@ -5,7 +5,7 @@ use serenity::framework::standard::{
     macros::command,
 };
 
-use std::{process, thread, time};
+use std::{process};
 
 #[command]
 fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
