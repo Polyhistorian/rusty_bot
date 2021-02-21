@@ -22,13 +22,13 @@ mod embedbuilder;
 
 #[command]
 fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
-    let mut message_content : String = msg.content.clone();
+    let mut message_content: String = msg.content.clone();
 
     message_content = message_to_title(message_content);
 
     if !message_content.is_ascii() {
         msg.reply(ctx, "Sorry, that message doesn't appear to be a valid ascii string.")?;
-        return Err(CommandError("Abilityinfo: Not ascii string".to_string()))
+        return Err(CommandError("Abilityinfo: Not ascii string".to_string()));
     }
 
     //println!["{}", message_content];
@@ -39,64 +39,61 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
 
     let page_parse = strip_to_page_data(&response_body);
 
-    let page_data : String;
+    let page_data: String;
 
     match page_parse {
         Ok(x) => page_data = x,
         Err(x) => {
             msg.reply(ctx, "Server returned no options for formatting, check that an ability by that name exists or try again later.")?;
-            return Err(x)
+            return Err(CommandError::from(x));
         }
     }
 
     //println!("{}", page_data);
 
-    let ability_box : &str = page_data.split("</onlyinclude>").collect::<Vec<&str>>()[0];
+    let ability_box: &str = page_data.split("</onlyinclude>").collect::<Vec<&str>>()[0];
 
-    let mut split_ability_box : Vec<&str> = ability_box.split("\\n").collect::<Vec<&str>>();
+    let mut split_ability_box: Vec<&str> = ability_box.split("\\n").collect::<Vec<&str>>();
 
     //Remove ending and starting lines, leaving content 
     split_ability_box.remove(0);
     split_ability_box.pop();
 
-    let mut main_list : Vec<String> = Vec::new();
-    let mut primary_fire_list : Vec<String> = Vec::new();
-    let mut secondary_fire_list : Vec<String> = Vec::new();
+    let mut main_list: Vec<String> = Vec::new();
+    let mut primary_fire_list: Vec<String> = Vec::new();
+    let mut secondary_fire_list: Vec<String> = Vec::new();
 
 
     for item in split_ability_box {
         let mutable_item = item;
 
         let replaced_item = mutable_item.replace('|', "")
-                    .replace('{', "")
-                    .replace('}', "")
-                    .replace('[', "")
-                    .replace(']', "")
-                    .replace("Texttip", "")
-                    .replace("texttip", "")
-                    .replace("/Texttip", "")
-                    .replace("/texttip", "");
+            .replace('{', "")
+            .replace('}', "")
+            .replace('[', "")
+            .replace(']', "")
+            .replace("Texttip", "")
+            .replace("texttip", "")
+            .replace("/Texttip", "")
+            .replace("/texttip", "");
 
         let colour_code_regex = Regex::new(r"<.*?>").unwrap();
 
-        let regex_replaced_item : String = colour_code_regex.replace_all(&replaced_item, "").trim().to_string();
+        let regex_replaced_item: String = colour_code_regex.replace_all(&replaced_item, "").trim().to_string();
 
         if regex_replaced_item.contains("key=") {
-            continue
+            continue;
         }
 
         if regex_replaced_item.starts_with("image") || regex_replaced_item.starts_with("name") || regex_replaced_item.starts_with("description") {
             main_list.push(regex_replaced_item.to_string());
-        }
-        else if regex_replaced_item.starts_with("secd") {
+        } else if regex_replaced_item.starts_with("secd") {
             let prefix_removal = regex_replaced_item.replacen("secd", "", 1);
             secondary_fire_list.push(prefix_removal.to_string());
-        }
-        else if regex_replaced_item.starts_with("prim") {
+        } else if regex_replaced_item.starts_with("prim") {
             let prefix_removal = regex_replaced_item.replacen("prim", "", 1);
             primary_fire_list.push(prefix_removal.to_string());
-        }
-        else {
+        } else {
             primary_fire_list.push(regex_replaced_item.to_string());
         }
     }
@@ -107,6 +104,7 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
     println!();
     */
 
+    /*
     println!["Printing main list:"];
     for item in main_list.clone() {
         println!["{}", item];
@@ -124,47 +122,25 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
         for item in secondary_fire_list.clone() {
             println!["{}", item];
         }
-    }
+    }*/
 
     let channel_id = msg.channel_id;
 
     //Main message, with weapon name and description
-    let _ = channel_id.send_message(&ctx.http, |m| {    
-        m.embed(|mut e| {
-            e = embedbuilder::build_new(main_list, e);
-
-            e
-        });
-        m
-    });
+    send_embed(channel_id, main_list);
 
     //Primary fire message, with info on that mode
-    let _ = channel_id.send_message(&ctx.http, |m| {    
-        m.embed(|mut e| {
-            e = embedbuilder::build_new(primary_fire_list, e);
-
-            e
-        });
-        m
-    });
+    send_embed(channel_id, primary_fire_list);
 
     //All weapons don't have a secondary fire mode, so no message for them
     if !secondary_fire_list.is_empty() {
-        let _ = channel_id.send_message(&ctx.http, |m| {    
-            m.embed(|mut e| {
-                e = embedbuilder::build_new(secondary_fire_list, e);
-                
-    
-                e
-            });
-            m
-        });
+        send_embed(channel_id, secondary_fire_list);
     }
 
     Ok(())
 }
 
-fn strip_to_page_data(response_body : &str ) -> Result<String, CommandError> {
+fn strip_to_page_data(response_body: &str) -> Result<String> {
     let response_json = json::parse(&response_body)?;
 
     let filtered_data = response_json["query"]["pages"].clone();
@@ -172,23 +148,22 @@ fn strip_to_page_data(response_body : &str ) -> Result<String, CommandError> {
     let filtered_string = json::stringify(filtered_data);
 
     //Convert JSON object to a HashMap to make accessing the first object easier (The name of which is an ID, so we can't predict it)
-    let deserialized : HashMap<String, Value> = serde_json::from_str(&filtered_string).unwrap();
+    let deserialized: HashMap<String, Value> = serde_json::from_str(&filtered_string).unwrap();
 
     let value = deserialized.values().nth(0);
 
-    let deserialised_filter : String;
+    let deserialised_filter: String;
 
-    if let Some(x) = value { 
-        deserialised_filter = x.to_string() 
-    } 
-    else {
-        return Err(CommandError("Abilityinfo: Data error, no returned options from server".to_string()))
+    if let Some(x) = value {
+        deserialised_filter = x.to_string()
+    } else {
+        return Err(Error("Abilityinfo: Data error, no returned options from server".to_string()));
     }
 
     //println!["{}", deserialised_filter];
 
     if !deserialised_filter.contains("revisions") {
-        return Err(CommandError("Abilityinfo: Data error, no returned options from server".to_string()))
+        return Err(Error("Abilityinfo: Data error, no returned options from server".to_string()));
     }
 
     let page_json = json::parse(&deserialised_filter)?;
@@ -200,7 +175,7 @@ fn strip_to_page_data(response_body : &str ) -> Result<String, CommandError> {
 
 fn message_to_title(message: String) -> String {
     let mut message_content = message;
-    
+
     message_content = message_content.replace("~abilityinfo", "");
     message_content = message_content.replace('"', "");
     message_content = message_content.replace('\'', "");
@@ -217,8 +192,20 @@ fn uri_create(name: &str) -> String {
                                 &rvprop=content\
                                 &format=json\
                                 &titles={}", name
-                            );
-                            
+    );
+
 
     format!("{}{}", uri_base, arguments)
+}
+
+fn send_embed(channel_id: ChanelId, embed_vector: Vec<String>) {
+    let _ = channel_id.send_message(&ctx.http, |m| {
+        m.embed(|mut e| {
+            e = embedbuilder::build_new(embed_vector, e);
+
+
+            e
+        });
+        m
+    });
 }

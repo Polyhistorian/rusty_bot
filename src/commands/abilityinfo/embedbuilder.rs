@@ -31,7 +31,7 @@ fn get_weapon_property_list() -> HashMap<String, String> {
     list_of_weapon_properties
 } 
 
-pub fn build_new<'a>(list : Vec<String>, e : &'a mut serenity::builder::CreateEmbed) -> &'a mut serenity::builder::CreateEmbed {
+pub fn build_new(list : Vec<String>, e : &mut serenity::builder::CreateEmbed) -> &mut serenity::builder::CreateEmbed {
     let list_of_weapon_properties : HashMap<String, String> = get_weapon_property_list();
 
     for item in list {
