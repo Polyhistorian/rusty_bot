@@ -15,6 +15,7 @@ use serenity::framework::standard::{
     CommandResult,
     macros::command,
 };
+use serenity::model::id::ChannelId;
 
 use std::collections::HashMap;
 
@@ -127,20 +128,20 @@ fn abilityinfo(ctx: &mut Context, msg: &Message) -> CommandResult {
     let channel_id = msg.channel_id;
 
     //Main message, with weapon name and description
-    send_embed(channel_id, main_list);
+    send_embed(channel_id, main_list, ctx);
 
     //Primary fire message, with info on that mode
-    send_embed(channel_id, primary_fire_list);
+    send_embed(channel_id, primary_fire_list, ctx);
 
     //All weapons don't have a secondary fire mode, so no message for them
     if !secondary_fire_list.is_empty() {
-        send_embed(channel_id, secondary_fire_list);
+        send_embed(channel_id, secondary_fire_list, ctx);
     }
 
     Ok(())
 }
 
-fn strip_to_page_data(response_body: &str) -> Result<String> {
+fn strip_to_page_data(response_body: &str) -> std::result::Result<String, CommandError> {
     let response_json = json::parse(&response_body)?;
 
     let filtered_data = response_json["query"]["pages"].clone();
@@ -157,13 +158,13 @@ fn strip_to_page_data(response_body: &str) -> Result<String> {
     if let Some(x) = value {
         deserialised_filter = x.to_string()
     } else {
-        return Err(Error("Abilityinfo: Data error, no returned options from server".to_string()));
+        return Err(CommandError("Abilityinfo: Data error, no returned options from server".to_string()));
     }
 
     //println!["{}", deserialised_filter];
 
     if !deserialised_filter.contains("revisions") {
-        return Err(Error("Abilityinfo: Data error, no returned options from server".to_string()));
+        return Err(CommandError("Abilityinfo: Data error, no returned options from server".to_string()));
     }
 
     let page_json = json::parse(&deserialised_filter)?;
@@ -198,7 +199,7 @@ fn uri_create(name: &str) -> String {
     format!("{}{}", uri_base, arguments)
 }
 
-fn send_embed(channel_id: ChanelId, embed_vector: Vec<String>) {
+fn send_embed(channel_id: ChannelId, embed_vector: Vec<String>, ctx: &mut Context) {
     let _ = channel_id.send_message(&ctx.http, |m| {
         m.embed(|mut e| {
             e = embedbuilder::build_new(embed_vector, e);

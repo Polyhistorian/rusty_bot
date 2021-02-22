@@ -1,4 +1,7 @@
 extern crate serenity;
+extern crate heck;
+extern crate json;
+extern crate reqwest;
 
 use std::collections::HashMap;
 
@@ -36,6 +39,7 @@ pub fn build_new(list : Vec<String>, e : &mut serenity::builder::CreateEmbed) ->
 
     for item in list {
         let split : Vec<&str> = item.split('=').collect();
+        if split.len() != 2 {continue};
         let property = split[0].trim();
         let value = split[1].trim();
 
@@ -51,6 +55,13 @@ pub fn build_new(list : Vec<String>, e : &mut serenity::builder::CreateEmbed) ->
             e.description(format!["\"{}\"", value]);
             continue
         }
+        if property == "image" {
+            let url = fetch_image(value);
+            if !url.is_empty() {
+                e.image(url);
+            }
+            continue;
+        }
 
         if let Some(property_string) = list_of_weapon_properties.get(property) {
             e.field(property_string, value, true);
@@ -58,4 +69,31 @@ pub fn build_new(list : Vec<String>, e : &mut serenity::builder::CreateEmbed) ->
     }
 
     e
+}
+
+fn fetch_image(name: &str) -> String {
+    let request_url = uri_create(&name);
+    if let Ok(mut response) = reqwest::get(&request_url) {
+        if let Ok(body) = response.text() {
+            if let Ok(response_json) = json::parse(&body) {
+                return response_json["query"]["allimages"][0]["url"].clone().to_string()
+            }
+        }
+    }
+
+    "".to_owned()
+}
+
+fn uri_create(name: &str) -> String {
+    let uri_base = "http://overwatch.wikia.com";
+    let arguments = format!("/api.php?action=query\
+                                &list=allimages\
+                                &ailimit=1\
+                                &aifrom={}\
+                                &aiprop=url\
+                                &format=json", name
+    );
+
+
+    format!("{}{}", uri_base, arguments)
 }
