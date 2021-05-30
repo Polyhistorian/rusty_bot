@@ -1,5 +1,5 @@
 [package]
-authors = ["Rasmus Korjus <thefinnisharmy@gmail.com>"]
+authors = ["Polyhistorian <root@csyxy.fi>"]
 categories = ["command-line-utilities", "games"]
 description = "Rust implementation of my Pyt<wh>orstBot, meaning a bot to fetch ability info from the overwatch wiki"
 edition = "2018"
