@@ -750,7 +750,7 @@ checksum = "3a800d6aa50af4b5850b2b0f659625ce9504df908e9733b635720483be26174f"
 dependencies = [
  "bytes 0.4.12",
  "futures 0.1.29",
- "hyper 0.12.35",
+ "hyper 0.12.36",
  "native-tls",
  "tokio-io",
 ]
@@ -1389,7 +1389,7 @@ dependencies = [
  "flate2",
  "futures 0.1.29",
  "http 0.1.21",
- "hyper 0.12.35",
+ "hyper 0.12.36",
  "hyper-tls",
  "log",
  "mime",
@@ -1591,11 +1591,11 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.44"
+version = "1.0.81"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48c575e0cc52bdd09b47f330f646cf59afc586e9c4e3ccd6fc1f625b8ea1dad7"
+checksum = "9b7ce2b32a1aed03c558dc61a5cd328f15aff2dbc17daad8fb8af04d2100e15c"
 dependencies = [
- "itoa 0.4.4",
+ "itoa 1.0.2",
  "ryu",
  "serde",
 ]
