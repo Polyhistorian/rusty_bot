@@ -1,23 +1,20 @@
-use serenity::prelude::*;
-use serenity::model::prelude::*;
-use serenity::framework::standard::{
-    CommandResult,
-    macros::command,
-};
+use std::process;
 
-use std::{process};
+use serenity::framework::standard::{macros::command, CommandResult};
+use serenity::model::prelude::*;
+use serenity::prelude::*;
 
 #[command]
-fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
-    msg.reply(ctx, "Pong!")?;
+async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
+    msg.reply(&ctx.http, "Pong!").await?;
 
     Ok(())
 }
 
 #[command]
 #[owners_only]
-fn shutdown(ctx: &mut Context, msg: &Message) -> CommandResult {
-    msg.reply(ctx.clone(), "Shutting down.")?;
+async fn shutdown(ctx: &Context, msg: &Message) -> CommandResult {
+    msg.reply(&ctx.http, "Shutting down.").await?;
 
     println!["Got shutdown command from user, shutting down."];
 
