@@ -24,7 +24,7 @@ version = "0.11.16"
 features = ["blocking"]
 
 [dependencies.tokio]
-version = "1.27.0"
+version = "1.28.1"
 features = ["macros", "signal", "rt-multi-thread"]
 
 [dependencies.serenity]
